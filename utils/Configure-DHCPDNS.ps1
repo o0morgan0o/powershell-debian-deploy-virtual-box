@@ -138,7 +138,7 @@ zone `"192.168.58.in-addr.arpa`" {
     # Copy of DNS Zones
     # Zone eas.lan
     # =================================================================================================================
-    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MachineSSHPortTranslation -Path .\..\confs\dnszones\db.eas.lan -Destination ~ -Verbose -AcceptKey
+    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MachineSSHPortTranslation -Path .\confs\dnszones\db.eas.lan -Destination ~ -Verbose -AcceptKey
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo dos2unix ~/db.eas.lan"
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo sed -i 's/{{DHCP_IP_ADDRESS}}/$DHCP_IP_ADDRESS/g' ~/db.eas.lan"
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo sed -i 's/{{MAIL_IP_ADDRESS}}/$MAIL_IP_ADDRESS/g' ~/db.eas.lan"
