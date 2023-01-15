@@ -1,0 +1,19 @@
+
+$TTL 604800 ;
+@  IN  SOA eas-srv-dd.eas.lan. root.eas.lan. ( ;
+            3           ; Serial
+            604800      ; Refresh
+            86400       ; Retry
+            2419200     ; Expire
+            604800 )    ; Negative Cache TTL 
+;=========== @ Entries
+@  IN  NS  eas-srv-dd.eas.lan. ;
+@  IN  A   {{DHCP_IP_ADDRESS}} ;
+@  IN  MX  {{MAIL_LAST_BYTE_IP_ADDRESS}} smtp ;
+
+;=========== A Entries
+eas-srv-dd  IN  A   {{DHCP_IP_ADDRESS}} ;
+eas-srv-files  IN  A   {{MAIL_IP_ADDRESS}} ;
+eas-srv-mail  IN  A   {{MAIL_IP_ADDRESS}} ; 
+eas-srv-fmail  IN  A   {{MAIL_IP_ADDRESS}} ;
+smtp  IN  A   {{MAIL_IP_ADDRESS}} ;

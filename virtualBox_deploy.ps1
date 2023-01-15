@@ -40,11 +40,22 @@ $DHCP_IP_ADDRESS="192.168.58.10"
 $DNS_IP_ADDRESS="192.168.58.10"
 # Credential for admin user will be used in several places
 $AdminUserPassword = "Admin123"
+
+# =========================================================================================================================
 # Port for nat translations
+# =========================================================================================================================
+# DHCP_DNS
 $SSH_PORT_TRANSLATION_DD=2222
-$SSH_PORT_TRANSLATION_FMAIL=2223
 $NAT_PORT_TRANSLATION_DD_HTTP=8022
+# FTP_MAIL
+$SSH_PORT_TRANSLATION_FMAIL=2223
 $NAT_PORT_TRANSLATION_FMAIL_HTTP=8023
+# CLIENT_01
+$SSH_PORT_TRANSLATION_CLIENT_1=2230
+$NAT_PORT_TRANLSATION_CLIENT_1_HTTP=8030
+# CLIENT_02
+$SSH_PORT_TRANSLATION_CLIENT_2=2231
+$NAT_PORT_TRANLSATION_CLIENT_2_HTTP=8030
 
 # =========================================================================================================================
 # Creation of credentials for login via ssh
@@ -79,8 +90,8 @@ Delete-VM -VMName $VM_CLIENT_02
 # Creation of all the Server VMs and client VMs
 New-CloneVM -VMSource $VM_SOURCE_SERVER -VMName $VM_SRV_DD -SSHRemotePort $SSH_PORT_TRANSLATION_DD -HTTPRemotePort $NAT_PORT_TRANSLATION_DD_HTTP -WithNAT $true -WithHostOnly $true
 New-CloneVM -VMSource $VM_SOURCE_SERVER -VMName $VM_SRV_FILES -SSHRemotePort $SSH_PORT_TRANSLATION_FMAIL -HTTPRemotePort $NAT_PORT_TRANSLATION_FMAIL_HTTP -WithNAT $true -WithHostOnly $true
-# New-CloneVM -VMSource $VM_SOURCE_CLIENT -VMName $VM_CLIENT_01 -SSHRemotePort 2230 -HTTPRemotePort 8030 -WithNAT $true -WithHostOnly $true
-# New-CloneVM -VMSource $VM_SOURCE_CLIENT -VMName $VM_CLIENT_02 -SSHRemotePort 2231 -HTTPRemotePort 8031 -WithNAT $true -WithHostOnly $true
+New-CloneVM -VMSource $VM_SOURCE_CLIENT -VMName $VM_CLIENT_01 -SSHRemotePort $SSH_PORT_TRANSLATION_CLIENT_1 -HTTPRemotePort $NAT_PORT_TRANLSATION_CLIENT_1_HTTP -WithNAT $true -WithHostOnly $true
+New-CloneVM -VMSource $VM_SOURCE_CLIENT -VMName $VM_CLIENT_02 -SSHRemotePort $SSH_PORT_TRANSLATION_CLIENT_2 -HTTPRemotePort $NAT_PORT_TRANLSATION_CLIENT_2_HTTP -WithNAT $true -WithHostOnly $true
 
 # ========================================
 # We modify the client-01 VM because it will use reserved addresses on DHCP so we specify a mac address on enp0s8
@@ -90,8 +101,8 @@ Set-NicMacAddress -MACAddress $NIC_MAC_ADDRESS_CLIENT_01 -VMName $VM_CLIENT_01
 # Start the VMs
 Start-VM -VMName $VM_SRV_DD
 Start-VM -VMName $VM_SRV_FILES
-# Start-VM -VMName $VM_CLIENT_01
-# Start-VM -VMName $VM_CLIENT_02
+Start-VM -VMName $VM_CLIENT_01
+Start-VM -VMName $VM_CLIENT_02
 
 # ========================================
 Write-Output "Waiting for the VMs to start"
@@ -161,23 +172,23 @@ while ($retries -gt 0) {
 
 # ((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
 #  Files Machine (Port 2223 -> shell_script__files.sh)
-# $port = 2230
-# $retries = 4 
-# while($retries -gt 0){
-#     try{
-#         Get-SSHTrustedHost | Remove-SSHTrustedHost
-#         Write-Host "Trying to connect to the VM on port $port... $retries" -BackgroundColor Red -ForegroundColor White
-#         $session = New-SSHSession -ComputerName 127.0.0.1 -Port $port -Credential $Creds -AcceptKey
-#         Configure-ClientDebian -SshSessionId $session.SessionId
-#         Remove-SSHSession -SessionId $session.SessionId
-#         $retries = -1
-#     }catch{
-            # Write-Warning $Error[0]
-#         Write-Host "Can't connect !" -BackgroundColor Red -ForegroundColor White
-#         $retries--
-#         Start-Sleep -s 2
-#     }
-# }
+$port = 2230
+$retries = 4 
+while($retries -gt 0){
+    try{
+        Get-SSHTrustedHost | Remove-SSHTrustedHost
+        Write-Host "Trying to connect to the VM on port $port... $retries" -BackgroundColor Red -ForegroundColor White
+        $session = New-SSHSession -ComputerName 127.0.0.1 -Port $port -Credential $Creds -AcceptKey
+        Configure-ClientDebian -SshSessionId $session.SessionId
+        Remove-SSHSession -SessionId $session.SessionId
+        $retries = -1
+    }catch{
+            Write-Warning $Error[0]
+        Write-Host "Can't connect !" -BackgroundColor Red -ForegroundColor White
+        $retries--
+        Start-Sleep -s 2
+    }
+}
 # END MACHINE CONFIGURATION *************************************************************************
 # )))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
 

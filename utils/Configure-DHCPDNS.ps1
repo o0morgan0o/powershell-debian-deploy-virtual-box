@@ -17,6 +17,7 @@ function Configure-DHCPDNSServerDebian {
     $MAIL_LAST_BYTE_IP_ADDRESS = "20"
     $CLIENT_01_IP_ADDRESS_RESERVED = "192.168.58.110"
     $EAS_DOMAIN = "eas.lan"
+    $MACHINE_PORT = "2222"
 
     # create backups of config files
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo cp /etc/network/interfaces /etc/network/interfaces.bak"
@@ -131,65 +132,37 @@ zone `"192.168.58.in-addr.arpa`" {
     allow-query { any; };
 };
 ' | sudo tee -a /etc/bind/named.conf.local"
-    # set /etc/bind/db.eas.lan
-    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo touch /etc/bind/db.eas.lan"
-    # SOA
-    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "echo '
-`$TTL 604800 ;
-@  IN  SOA eas-srv-dd.eas.lan. root.eas.lan. ( ;
-            3           ; Serial
-            604800      ; Refresh
-            86400       ; Retry
-            2419200     ; Expire
-            604800 )    ; Negative Cache TTL 
-;=========== @ Entries
-@  IN  NS  eas-srv-dd.eas.lan. ;
-@  IN  A   $DHCP_IP_ADDRESS ;
-@  IN  MX  $MAIL_LAST_BYTE_IP_ADDRESS smtp ;
 
-;=========== A Entries
-eas-srv-dd  IN  A   $DHCP_IP_ADDRESS ;
-eas-srv-files  IN  A   $MAIL_IP_ADDRESS ;
-eas-srv-mail  IN  A   $MAIL_IP_ADDRESS ; 
-eas-srv-fmail  IN  A   $MAIL_IP_ADDRESS ;
-smtp  IN  A   $MAIL_IP_ADDRESS ;
-' | sudo tee -a /etc/bind/db.eas.lan"
-    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo dos2unix /etc/bind/db.eas.lan"
 
-    # set /etc/bind/db.192
-    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo touch /etc/bind/db.192"
-    # SOA
-    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "echo '
-`$TTL 604800 ;
-@ IN  SOA eas-srv-dd.eas.lan. root.eas.lan. ( ;
-            3           ; Serial
-            604800      ; Refresh
-            86400       ; Retry
-            2419200     ; Expire
-            604800 )    ; Negative Cache TTL
-    ;=========== @ Entries
-@  IN  NS  eas.lan. ;
-@  IN  MX $MAIL_LAST_BYTE_IP_ADDRESS smtp ;
-@  IN  PTR eas-srv-dd.eas.lan. ;
-@  IN  PTR eas-srv-files.eas.lan. ;
-@  IN  PTR eas-srv-mail.eas.lan. ;
-@  IN  PTR eas-srv-fmail.eas.lan. ;
+    # =================================================================================================================
+    # Copy of DNS Zones
+    # Zone eas.lan
+    # =================================================================================================================
+    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MACHINE_PORT -Path .\confs\dnszones\db.eas.lan -Destination ~ -Verbose -AcceptKey
+    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo dos2unix ~/db.eas.lan"
+    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo sed -i 's/{{DHCP_IP_ADDRESS}}/$DHCP_IP_ADDRESS/g' ~/db.eas.lan"
+    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo sed -i 's/{{MAIL_IP_ADDRESS}}/$MAIL_IP_ADDRESS/g' ~/db.eas.lan"
+    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo sed -i 's/{{MAIL_LAST_BYTE_IP_ADDRESS}}/$MAIL_LAST_BYTE_IP_ADDRESS/g' ~/db.eas.lan"
+    # move and set permissions
+    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo mv -f ~/db.eas.lan /etc/bind/db.eas.lan"
+    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo chown root:root /etc/bind/db.eas.lan"
 
-;=========== PTR Entries
-1  IN  PTR eas.lan ;
-10  IN  PTR eas-srv-dd.eas.lan ;
-10  IN  PTR eas-srv-dd.eas.lan. ;
-$MAIL_LAST_BYTE_IP_ADDRESS  IN  PTR smtp.eas-srv-mail.eas.lan. ;
-$MAIL_LAST_BYTE_IP_ADDRESS  IN  PTR eas-srv-mail.eas.lan. ;
-$MAIL_LAST_BYTE_IP_ADDRESS  IN  PTR eas-srv-files.eas.lan. ;
-$MAIL_LAST_BYTE_IP_ADDRESS  IN  PTR eas-srv-fmail.eas.lan. ;
-' | sudo tee -a /etc/bind/db.192"
-    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo dos2unix /etc/bind/db.192"
+    # =================================================================================================================
+    # Copy of DNS Zones
+    # Zone 192.168.58.in-addr.arpa
+    # =================================================================================================================
+    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MACHINE_PORT -Path .\confs\dnszones\db.192 -Destination ~ -Verbose -AcceptKey
+    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo dos2unix ~/db.192"
+    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo sed -i 's/{{MAIL_LAST_BYTE_IP_ADDRESS}}/$MAIL_LAST_BYTE_IP_ADDRESS/g' ~/db.192"
+    # move and set permissions
+    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo mv -f ~/db.192 /etc/bind/db.192"
+    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo chown root:root /etc/bind/db.192"
+
     # check configuration
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo named-checkconf"
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo service bind9 restart"
 
-Set-Resolv -DNS_IP_ADDRESS $DHCP_IP_ADDRESS
+    Set-Resolv -DNS_IP_ADDRESS $DHCP_IP_ADDRESS
 
 
     # =================================================================================================================
