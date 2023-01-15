@@ -1,7 +1,8 @@
 
 function Configure-DHCPDNSServerDebian {
     Param(
-        [Parameter(Mandatory=$true)][String]$SshSessionId
+        [Parameter(Mandatory=$true)][String]$SshSessionId,
+        [Parameter(Mandatory=$true)][String]$DHCP_IP_ADDRESS
     )
 
     # variables
@@ -11,7 +12,6 @@ function Configure-DHCPDNSServerDebian {
     $SUBNET_MASK = "255.255.255.0"
     $DHCP_RANGE_START = "192.168.58.50"
     $DHCP_RANGE_END = "192.168.58.220"
-    $DHCP_IP_ADDRESS = "192.168.58.10"
     $DHCP_OPTION_ROUTER = "192.168.58.1"
     $MAIL_IP_ADDRESS = "192.168.58.20"
     $MAIL_LAST_BYTE_IP_ADDRESS = "20"
@@ -149,10 +149,10 @@ zone `"192.168.58.in-addr.arpa`" {
 
 ;=========== A Entries
 eas-srv-dd  IN  A   $DHCP_IP_ADDRESS ;
-eas-srv-files  IN  A   $DHCP_IP_ADDRESS ;
-eas-srv-mail  IN  A   $DHCP_IP_ADDRESS ; 
-eas-srv-fmail  IN  A   $DHCP_IP_ADDRESS ;
-smtp  IN  A   $DHCP_IP_ADDRESS ;
+eas-srv-files  IN  A   $MAIL_IP_ADDRESS ;
+eas-srv-mail  IN  A   $MAIL_IP_ADDRESS ; 
+eas-srv-fmail  IN  A   $MAIL_IP_ADDRESS ;
+smtp  IN  A   $MAIL_IP_ADDRESS ;
 ' | sudo tee -a /etc/bind/db.eas.lan"
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo dos2unix /etc/bind/db.eas.lan"
 
@@ -189,15 +189,7 @@ $MAIL_LAST_BYTE_IP_ADDRESS  IN  PTR eas-srv-fmail.eas.lan. ;
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo named-checkconf"
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo service bind9 restart"
 
-    # =================================================================================================================
-    # setup /etc/resolv.conf
-    # =================================================================================================================
-    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "echo '
-domain eas.lan
-search eas.lan
-nameserver $DHCP_IP_ADDRESS
-' | sudo tee /etc/resolv.conf"
-    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo dos2unix /etc/resolv.conf"
+Set-Resolv -DNS_IP_ADDRESS $DHCP_IP_ADDRESS
 
 
     # =================================================================================================================

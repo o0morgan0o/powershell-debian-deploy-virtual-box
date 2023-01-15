@@ -1,0 +1,5 @@
+user = mailuser
+password = {{MAIL_USER_PASS}}
+hosts = 127.0.0.1
+dbname = postfix
+query = SELECT 1 FROM domain where domain='%s'

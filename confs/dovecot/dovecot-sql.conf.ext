@@ -1,0 +1,3 @@
+driver = mysql
+connect = host=127.0.0.1 dbname=postfix user=mailuser password={{MAIL_USER_PASS}}
+password_query = SELECT username,domain,password FROM mailbox WHERE username='%u';

@@ -1,0 +1,2 @@
+dovecot unix    -   n   n   -   -   pipe
+  flags=DRhu  user=mail-handler:mail-handler  argv=/usr/lib/dovecot/dovecot-lda -f ${sender} -d ${recipient}
