@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Exec=firefox http://eas-srv-mail/rainloop http://eas-srv-mail/postfixadmin/setup.php
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name[en_US]=firefox-autostart
+Name=Firefox-Autostart
+Comment=Launch firefox at login

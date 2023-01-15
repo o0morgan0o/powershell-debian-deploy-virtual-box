@@ -7,6 +7,9 @@
 # -Command "echo test-$var"
 # -------------------------------------------------------------------------------------------------------------------------
 
+# TODO: Exit gracefully if Posh-SSH is not installed
+# TODO: Check or create the network Host-Only interface used by the architecture
+
 # Counter for keeping track of operations
 $global:operationErrorCounter = 0;
 $global:operationSuccessCounter = 0;
@@ -23,6 +26,7 @@ $VBoxManageExe = """C:\Program Files\Oracle\VirtualBox\VBoxManage.exe"""
 . .\utils\InvokeCommands.ps1
 . .\utils\Configure-DHCPDNS.ps1
 . .\utils\Configure-FTPMAIL.ps1
+. .\utils\Configure-Client.ps1
 
 # =========================================================================================================================
 # set variables
@@ -70,8 +74,8 @@ $Creds = [System.Management.Automation.PSCredential]::new($AdminUser, $SecurePas
 
 # ========================================
 # Stop all vms before starting
-Stop-VM -VMName $VM_SRV_DD
-Stop-VM -VMName $VM_SRV_FILES
+# Stop-VM -VMName $VM_SRV_DD
+# Stop-VM -VMName $VM_SRV_FILES
 Stop-VM -VMName $VM_CLIENT_01
 Stop-VM -VMName $VM_CLIENT_02
 
@@ -81,15 +85,15 @@ Start-Sleep -s 5
 
 # ========================================
 # Delete all vms before starting
-Delete-VM -VMName $VM_SRV_DD
-Delete-VM -VMName $VM_SRV_FILES
+# Delete-VM -VMName $VM_SRV_DD
+# Delete-VM -VMName $VM_SRV_FILES
 Delete-VM -VMName $VM_CLIENT_01
 Delete-VM -VMName $VM_CLIENT_02
 
 # ========================================
 # Creation of all the Server VMs and client VMs
-New-CloneVM -VMSource $VM_SOURCE_SERVER -VMName $VM_SRV_DD -SSHRemotePort $SSH_PORT_TRANSLATION_DD -HTTPRemotePort $NAT_PORT_TRANSLATION_DD_HTTP -WithNAT $true -WithHostOnly $true
-New-CloneVM -VMSource $VM_SOURCE_SERVER -VMName $VM_SRV_FILES -SSHRemotePort $SSH_PORT_TRANSLATION_FMAIL -HTTPRemotePort $NAT_PORT_TRANSLATION_FMAIL_HTTP -WithNAT $true -WithHostOnly $true
+# New-CloneVM -VMSource $VM_SOURCE_SERVER -VMName $VM_SRV_DD -SSHRemotePort $SSH_PORT_TRANSLATION_DD -HTTPRemotePort $NAT_PORT_TRANSLATION_DD_HTTP -WithNAT $true -WithHostOnly $true
+# New-CloneVM -VMSource $VM_SOURCE_SERVER -VMName $VM_SRV_FILES -SSHRemotePort $SSH_PORT_TRANSLATION_FMAIL -HTTPRemotePort $NAT_PORT_TRANSLATION_FMAIL_HTTP -WithNAT $true -WithHostOnly $true
 New-CloneVM -VMSource $VM_SOURCE_CLIENT -VMName $VM_CLIENT_01 -SSHRemotePort $SSH_PORT_TRANSLATION_CLIENT_1 -HTTPRemotePort $NAT_PORT_TRANLSATION_CLIENT_1_HTTP -WithNAT $true -WithHostOnly $true
 New-CloneVM -VMSource $VM_SOURCE_CLIENT -VMName $VM_CLIENT_02 -SSHRemotePort $SSH_PORT_TRANSLATION_CLIENT_2 -HTTPRemotePort $NAT_PORT_TRANLSATION_CLIENT_2_HTTP -WithNAT $true -WithHostOnly $true
 
@@ -99,8 +103,8 @@ Set-NicMacAddress -MACAddress $NIC_MAC_ADDRESS_CLIENT_01 -VMName $VM_CLIENT_01
 
 # ========================================
 # Start the VMs
-Start-VM -VMName $VM_SRV_DD
-Start-VM -VMName $VM_SRV_FILES
+# Start-VM -VMName $VM_SRV_DD
+# Start-VM -VMName $VM_SRV_FILES
 Start-VM -VMName $VM_CLIENT_01
 Start-VM -VMName $VM_CLIENT_02
 
@@ -121,69 +125,104 @@ Start-Sleep -s 10
 
 # ((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
 # DNS and DHCP Machine (Port 2222 -> shell_script__dd.sh)
-$port = $SSH_PORT_TRANSLATION_DD
-$retries = 4
-while ($retries -gt 0) {
-    try {
-        Get-SSHTrustedHost | Remove-SSHTrustedHost
-        Write-Host "Trying to connect to the VM on port $port... $retries" -BackgroundColor Red -ForegroundColor White
-        $session = New-SSHSession -ComputerName 127.0.0.1 -Port $port -Credential $Creds -AcceptKey -ConnectionTimeout 30
-        $retries = -1
-        Configure-DHCPDNSServerDebian -SshSessionId $session.SessionId -DHCP_IP_ADDRESS $DHCP_IP_ADDRESS 
-        Remove-SSHSession -SessionId $session.SessionId
-    }catch{
-        Write-Warning $Error[0]
-        Write-Host "Can't connect !" -BackgroundColor Red -ForegroundColor White
-        $retries--
-        Start-Sleep -s 2
-    }
-}
+# $port = $SSH_PORT_TRANSLATION_DD
+# $retries = 4
+# while ($retries -gt 0) {
+#     try {
+#         Get-SSHTrustedHost | Remove-SSHTrustedHost
+#         Write-Host "Trying to connect to the VM on port $port... $retries" -BackgroundColor Red -ForegroundColor White
+#         $session = New-SSHSession -ComputerName 127.0.0.1 -Port $port -Credential $Creds -AcceptKey -ConnectionTimeout 30
+#         $retries = -1
+#         Configure-DHCPDNSServerDebian -SshSessionId $session.SessionId -DHCP_IP_ADDRESS $DHCP_IP_ADDRESS 
+#         Remove-SSHSession -SessionId $session.SessionId
+#     }catch{
+#         Write-Warning $Error[0]
+#         Write-Host "Can't connect !" -BackgroundColor Red -ForegroundColor White
+#         $retries--
+#         Start-Sleep -s 2
+#     }
+# }
 # END MACHINE CONFIGURATION *************************************************************************
 # )))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
 
 
 # ((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
 #  Files Machine (Port 2223 -> shell_script__files.sh)
-$port = $SSH_PORT_TRANSLATION_FMAIL
-$retries = 4
-while ($retries -gt 0) {
-    try {
-        Get-SSHTrustedHost | Remove-SSHTrustedHost
-        Write-Host "Trying to connect to the VM on port $port... $retries" -BackgroundColor Red -ForegroundColor White
-        $session = New-SSHSession -ComputerName 127.0.0.1 -Port $port -Credential $Creds -AcceptKey -ConnectionTimeout 30
-        if ($session -eq $null) {
-            throw "Can't connect to the VM on port $port"
-        }else {
-            $retries = -1
-            Configure-FileServerDebian -SshSessionId $session.SessionId -DNS_IP_ADDRESS $DNS_IP_ADDRESS
-            Remove-SSHSession -SessionId $session.SessionId
-        }
+# $port = $SSH_PORT_TRANSLATION_FMAIL
+# $retries = 4
+# while ($retries -gt 0) {
+#     try {
+#         Get-SSHTrustedHost | Remove-SSHTrustedHost
+#         Write-Host "Trying to connect to the VM on port $port... $retries" -BackgroundColor Red -ForegroundColor White
+#         $session = New-SSHSession -ComputerName 127.0.0.1 -Port $port -Credential $Creds -AcceptKey -ConnectionTimeout 30
+#         if ($session -eq $null) {
+#             throw "Can't connect to the VM on port $port"
+#         }else {
+#             $retries = -1
+#             Configure-FileServerDebian -SshSessionId $session.SessionId -DNS_IP_ADDRESS $DNS_IP_ADDRESS
+#             Remove-SSHSession -SessionId $session.SessionId
+#         }
 
-    }catch{
-        Write-Warning $Error[0]
-        Write-Host "Can't connect !" -BackgroundColor Red -ForegroundColor White
-        $retries--
-        Start-Sleep -s 2
-    }
-}
+#     }catch{
+#         Write-Warning $Error[0]
+#         Write-Host "Can't connect !" -BackgroundColor Red -ForegroundColor White
+#         $retries--
+#         Start-Sleep -s 2
+#     }
+# }
 # END MACHINE CONFIGURATION *************************************************************************
 # )))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
 
+# TODO: Refactorisation of the code below for no duplication
 
 # ((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
-#  Files Machine (Port 2223 -> shell_script__files.sh)
-$port = 2230
+#  Client Machine 1 ( PDG Machine with IP Reserved on DHCP ) 
+$port = $SSH_PORT_TRANSLATION_CLIENT_1
 $retries = 4 
 while($retries -gt 0){
     try{
         Get-SSHTrustedHost | Remove-SSHTrustedHost
         Write-Host "Trying to connect to the VM on port $port... $retries" -BackgroundColor Red -ForegroundColor White
         $session = New-SSHSession -ComputerName 127.0.0.1 -Port $port -Credential $Creds -AcceptKey
-        Configure-ClientDebian -SshSessionId $session.SessionId
+        if ($session -eq $null) {
+            throw "Can't connect to the VM on port $port"
+        } else {
+            $retries = -1
+            Configure-ClientDebian -SshSessionId $session.SessionId -ClientHostname "eas-client-01" -MachineSSHPortTranslation $port -UserToCreate "PDG" -PasswordForUserToCreate "PDG"
+            Remove-SSHSession -SessionId $session.SessionId
+        }
+    }catch{
+        Write-Warning $Error[0]
+        Write-Host "Can't connect !" -BackgroundColor Red -ForegroundColor White
+        $retries--
+        Start-Sleep -s 2
+    }
+}
+# END MACHINE CONFIGURATION *************************************************************************
+# )))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+
+
+# ((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
+#  Client Machine 2 ( Machine pour useurs Marie ) 
+$port = $SSH_PORT_TRANSLATION_CLIENT_2
+$retries = 4 
+while($retries -gt 0){
+    try{
+        Get-SSHTrustedHost | Remove-SSHTrustedHost
+        Write-Host "Trying to connect to the VM on port $port... $retries" -BackgroundColor Red -ForegroundColor White
+        $session = New-SSHSession -ComputerName 127.0.0.1 -Port $port -Credential $Creds -AcceptKey
+        if ($session -eq $null) {
+            throw "Can't connect to the VM on port $port"
+        } else {
+            $retries = -1
+            Configure-ClientDebian -SshSessionId $session.SessionId -ClientHostname "eas-client-02" -MachineSSHPortTranslation $port -UserToCreate "marie" -PasswordForUserToCreate "marie"
+            Remove-SSHSession -SessionId $session.SessionId
+        }
+        Configure-ClientDebian -SshSessionId $session.SessionId -ClientHostname "eas-client-02" -MachineSSHPortTranslation $port  -UserToCreate "marie" -PasswordForUserToCreate "marie"
         Remove-SSHSession -SessionId $session.SessionId
         $retries = -1
     }catch{
-            Write-Warning $Error[0]
+        Write-Warning $Error[0]
         Write-Host "Can't connect !" -BackgroundColor Red -ForegroundColor White
         $retries--
         Start-Sleep -s 2

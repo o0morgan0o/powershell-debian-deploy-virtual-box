@@ -162,6 +162,7 @@ dns-search eas.lan
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo chown admin:admin /srv/postfixadmin/config.local.php"
     # we replace the placeholders with the correct values. we use a script for that
     Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MACHINE_PORT -Path .\confs\postfixadmin\password_replacer_script.sh -Destination ~ -Verbose -AcceptKey
+    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo dos2unix ~/password_replacer_script.sh"
     # we give permissions to execute to our script
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo chmod +x ~/password_replacer_script.sh"
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "~/password_replacer_script.sh"

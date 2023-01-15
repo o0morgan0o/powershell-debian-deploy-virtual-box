@@ -16,7 +16,10 @@ It's a tool made during my personal networking formation, the goal of this is to
 ### PreRequisites
 
 - The script is a powershell script, so you need to have recent powershell installation.
+- You must have Post-SSH installed on your machine. (view https://www.powershellgallery.com/packages/Posh-SSH/3.0.8 for installation instruction)
+- You must have VirtualBox installed on your machine.
 - You must have preconfigured 2 Debian Machines in virtual Box with some configuration:
+- You must have preconfigured a network in VirtualBox with the following configuration: `network 192.168.58.0 /24 ` with DHCP server disabled. It must be set on the second network interface (TODO: make this customizable)
 
 One server machine should be named **Debian_Server** in VirtualBox.
 One client machine should be named **Debian_Client** in VirtualBox, and should have a desktop environnement installed (optional, but it makes sense).
