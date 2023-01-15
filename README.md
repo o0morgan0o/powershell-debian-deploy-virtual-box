@@ -1,4 +1,4 @@
-# Debian Architecture Deployer
+# Debian Architecture Deployer for VirtualBox
 
 ## What is it ?
 
