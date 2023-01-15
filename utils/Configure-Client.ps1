@@ -52,5 +52,11 @@ iface enp0s8 inet dhcp
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo mv ~/firefox-autostart.sh.desktop /etc/xdg/autostart/firefox-autostart.sh.desktop"
     # we move it in the autostart folder
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo chown root:root /etc/xdg/autostart/firefox-autostart.sh.desktop"
+    # we also set a script on the client to open the firefox windows for admin
+    # TODO Find a better way to open firefox at launch
+    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "echo '#!/bin/bash' | sudo tee /home/$UserToCreate/firefox-launcher.sh"
+    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "echo 'firefox http://smtp.eas.lan/postfixadmin/setup.php http://smtp.eas.lan/rainloop' | sudo tee -a /home/$UserToCreate/firefox-launcher.sh"
+    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo chown ${UserToCreate}:${UserToCreate} /home/$UserToCreate/firefox-launcher.sh"
+    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo chmod +x /home/$UserToCreate/firefox-launcher.sh"
 
 }

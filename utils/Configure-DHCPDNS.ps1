@@ -2,7 +2,8 @@
 function Configure-DHCPDNSServerDebian {
     Param(
         [Parameter(Mandatory=$true)][String]$SshSessionId,
-        [Parameter(Mandatory=$true)][String]$DHCP_IP_ADDRESS
+        [Parameter(Mandatory=$true)][String]$DHCP_IP_ADDRESS,
+        [Parameter(Mandatory=$true)][String]$MachineSSHPortTranslation
     )
 
     # variables
@@ -17,7 +18,6 @@ function Configure-DHCPDNSServerDebian {
     $MAIL_LAST_BYTE_IP_ADDRESS = "20"
     $CLIENT_01_IP_ADDRESS_RESERVED = "192.168.58.110"
     $EAS_DOMAIN = "eas.lan"
-    $MACHINE_PORT = "2222"
 
     # create backups of config files
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo cp /etc/network/interfaces /etc/network/interfaces.bak"
@@ -138,7 +138,7 @@ zone `"192.168.58.in-addr.arpa`" {
     # Copy of DNS Zones
     # Zone eas.lan
     # =================================================================================================================
-    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MACHINE_PORT -Path .\confs\dnszones\db.eas.lan -Destination ~ -Verbose -AcceptKey
+    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MachineSSHPortTranslation -Path .\..\confs\dnszones\db.eas.lan -Destination ~ -Verbose -AcceptKey
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo dos2unix ~/db.eas.lan"
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo sed -i 's/{{DHCP_IP_ADDRESS}}/$DHCP_IP_ADDRESS/g' ~/db.eas.lan"
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo sed -i 's/{{MAIL_IP_ADDRESS}}/$MAIL_IP_ADDRESS/g' ~/db.eas.lan"
@@ -151,7 +151,7 @@ zone `"192.168.58.in-addr.arpa`" {
     # Copy of DNS Zones
     # Zone 192.168.58.in-addr.arpa
     # =================================================================================================================
-    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MACHINE_PORT -Path .\confs\dnszones\db.192 -Destination ~ -Verbose -AcceptKey
+    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MachineSSHPortTranslation -Path .\confs\dnszones\db.192 -Destination ~ -Verbose -AcceptKey
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo dos2unix ~/db.192"
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo sed -i 's/{{MAIL_LAST_BYTE_IP_ADDRESS}}/$MAIL_LAST_BYTE_IP_ADDRESS/g' ~/db.192"
     # move and set permissions

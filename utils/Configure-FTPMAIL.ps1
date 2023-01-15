@@ -2,13 +2,13 @@
 function Configure-FileServerDebian {
     Param(
         [Parameter(Mandatory=$true)][String]$SshSessionId,
-        [Parameter(Mandatory=$true)][String]$DNS_IP_ADDRESS
+        [Parameter(Mandatory=$true)][String]$DNS_IP_ADDRESS,
+        [Parameter(Mandatory=$true)][String]$MachineSSHPortTranslation
     )
 
     $FILE_SERVER_IP_ADDRESS = "192.168.58.20"
     $SUBNET = "192.168.58.0"
     $SUBNET_MASK = "255.255.255.0"
-    $MACHINE_PORT = 2223
     $POSTFIXADMIN_PASSWORD = "Admin123"
     $ROOT_PASSWORD = "Admin123"
 
@@ -53,7 +53,7 @@ dns-search eas.lan
     # create backup of config file
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo cp /etc/proftpd/proftpd.conf /etc/proftpd/proftpd.conf.bak"
     # We send the configuration via SCP and we move to the correct destination
-    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MACHINE_PORT -Path .\confs\proftpd.conf -Destination ~ -Verbose -AcceptKey
+    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MachineSSHPortTranslation -Path .\confs\proftpd.conf -Destination ~ -Verbose -AcceptKey
     # We move and overwrite the proftpd.conf file
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo mv -f ~/proftpd.conf /etc/proftpd/proftpd.conf"
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo chown root:root /etc/proftpd/proftpd.conf"
@@ -148,7 +148,7 @@ dns-search eas.lan
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo chown  -R www-data /srv/postfixadmin/templates_c/"
 
     # we transfer template configuration via scp
-    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MACHINE_PORT -Path .\confs\postfixadmin\config.local.php -Destination ~ -Verbose -AcceptKey
+    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MachineSSHPortTranslation -Path .\confs\postfixadmin\config.local.php -Destination ~ -Verbose -AcceptKey
     # we move config.local.php in correct folder
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo mv -f config.local.php /srv/postfixadmin/config.local.php"
     # we manually set up a temp php file for postfixadmin
@@ -161,7 +161,7 @@ dns-search eas.lan
     # we temporary give permissions on file config.local.php
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo chown admin:admin /srv/postfixadmin/config.local.php"
     # we replace the placeholders with the correct values. we use a script for that
-    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MACHINE_PORT -Path .\confs\postfixadmin\password_replacer_script.sh -Destination ~ -Verbose -AcceptKey
+    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MachineSSHPortTranslation -Path .\confs\postfixadmin\password_replacer_script.sh -Destination ~ -Verbose -AcceptKey
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo dos2unix ~/password_replacer_script.sh"
     # we give permissions to execute to our script
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo chmod +x ~/password_replacer_script.sh"
@@ -179,7 +179,7 @@ dns-search eas.lan
     
     # postfix configuration
     # we copy file mysql-virtual-mailbox-domains.cf
-    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MACHINE_PORT -Path .\confs\postfixadmin\mysql-virtual-mailbox-domains.cf -Destination ~ -Verbose -AcceptKey
+    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MachineSSHPortTranslation -Path .\confs\postfixadmin\mysql-virtual-mailbox-domains.cf -Destination ~ -Verbose -AcceptKey
     # We replace content of password
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sed -i 's/{{MAIL_USER_PASS}}/$POSTFIXADMIN_PASSWORD/g' ~/mysql-virtual-mailbox-domains.cf"
     # We move the file at its correct place
@@ -214,7 +214,7 @@ dns-search eas.lan
     # we do backup of docevot 10-auth.conf
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo cp /etc/dovecot/conf.d/auth-sql.conf.ext /etc/dovecot/conf.d/auth-sql.conf.ext.bak"
     # we copy the config file via scp and replace the original
-    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MACHINE_PORT -Path .\confs\dovecot\auth-sql.conf.ext -Destination ~ -Verbose -AcceptKey
+    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MachineSSHPortTranslation -Path .\confs\dovecot\auth-sql.conf.ext -Destination ~ -Verbose -AcceptKey
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo mv -f ~/auth-sql.conf.ext /etc/dovecot/conf.d/auth-sql.conf.ext"
     # set permissions
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo chown root:root /etc/dovecot/conf.d/auth-sql.conf.ext"
@@ -240,7 +240,7 @@ dns-search eas.lan
     # we do backup of docevot 10-master.conf
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo cp /etc/dovecot/conf.d/10-master.conf /etc/dovecot/conf.d/10-master.conf.bak"
     # we copy the config file via scp and replace the original
-    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MACHINE_PORT -Path .\confs\dovecot\10-master.conf -Destination ~ -Verbose -AcceptKey
+    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MachineSSHPortTranslation -Path .\confs\dovecot\10-master.conf -Destination ~ -Verbose -AcceptKey
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo mv -f ~/10-master.conf /etc/dovecot/conf.d/10-master.conf"
     # set permissions
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo chown root:root /etc/dovecot/conf.d/10-master.conf"
@@ -251,7 +251,7 @@ dns-search eas.lan
     # we do backup of docevot-sql.conf.ext
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo cp /etc/dovecot/dovecot-sql.conf.ext /etc/dovecot/dovecot-sql.conf.ext.bak"
     # we copy the config file via scp and replace the original
-    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MACHINE_PORT -Path .\confs\dovecot\dovecot-sql.conf.ext -Destination ~ -Verbose -AcceptKey
+    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MachineSSHPortTranslation -Path .\confs\dovecot\dovecot-sql.conf.ext -Destination ~ -Verbose -AcceptKey
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo sed -i 's#{{MAIL_USER_PASS}}#$ROOT_PASSWORD#g' ~/dovecot-sql.conf.ext"
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo mv -f ~/dovecot-sql.conf.ext /etc/dovecot/dovecot-sql.conf.ext"
     # set permissions
@@ -273,7 +273,7 @@ dns-search eas.lan
     # we do backup of /etc/postfix/master.cf
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo cp /etc/postfix/master.cf /etc/postfix/master.cf.bak"
     # we copy the config file via scp and replace the original
-    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MACHINE_PORT -Path .\confs\postfix\master.cf -Destination ~ -Verbose -AcceptKey
+    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MachineSSHPortTranslation -Path .\confs\postfix\master.cf -Destination ~ -Verbose -AcceptKey
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo dos2unix ~/master.cf"
     # we want to append the content of the file after /etc/postfix/master.cf.bak
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo cat ~/master.cf | sudo tee -a /etc/postfix/master.cf"
@@ -300,7 +300,7 @@ dns-search eas.lan
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo find /var/www/html/rainloop/ -type f -exec chmod 644 {} \;" 
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo chown -R www-data:www-data /var/www/html/rainloop/" 
     # copy apache2 config for rainloop via scp  
-    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MACHINE_PORT -Path .\confs\apache2\rainloop.conf -Destination ~ -Verbose -AcceptKey
+    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MachineSSHPortTranslation -Path .\confs\apache2\rainloop.conf -Destination ~ -Verbose -AcceptKey
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo mv -f ~/rainloop.conf /etc/apache2/sites-available/rainloop.conf"
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo dos2unix /etc/apache2/sites-available/rainloop.conf"
     # reset correct permission
