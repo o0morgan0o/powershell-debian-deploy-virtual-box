@@ -1,0 +1,10 @@
+
+[Desktop Entry]
+Type=Application
+Exec=filezilla
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name[en_US]=firefox-autostart
+Name=filezilla
+Comment=Launch filezilla at login

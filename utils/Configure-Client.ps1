@@ -42,6 +42,10 @@ iface enp0s8 inet dhcp
     # command to change password with the password provided
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "echo '${UserToCreate}:$PasswordForUserToCreate' | sudo chpasswd"
 
+    # =================================================================================================================
+    # install of filezilla
+    # =================================================================================================================
+    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo apt-get install filezilla -y"
 
     # =================================================================================================================
     # copy script in /etc/xdg/autostart for starting firefox at login
@@ -49,14 +53,21 @@ iface enp0s8 inet dhcp
     # we copy the firefox-autostart.sh.desktop gnome autostart file
     Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MachineSSHPortTranslation -Path .\confs\clients\scripts\firefox-autostart.sh.desktop -Destination ~ -Verbose -AcceptKey
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo dos2unix ~/firefox-autostart.sh.desktop"
-    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo mv ~/firefox-autostart.sh.desktop /etc/xdg/autostart/firefox-autostart.sh.desktop"
     # we move it in the autostart folder
+    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo mv ~/firefox-autostart.sh.desktop /etc/xdg/autostart/firefox-autostart.sh.desktop"
     Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo chown root:root /etc/xdg/autostart/firefox-autostart.sh.desktop"
-    # we also set a script on the client to open the firefox windows for admin
-    # TODO Find a better way to open firefox at launch
-    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "echo '#!/bin/bash' | sudo tee /home/$UserToCreate/firefox-launcher.sh"
-    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "echo 'firefox http://smtp.eas.lan/postfixadmin/setup.php http://smtp.eas.lan/rainloop' | sudo tee -a /home/$UserToCreate/firefox-launcher.sh"
-    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo chown ${UserToCreate}:${UserToCreate} /home/$UserToCreate/firefox-launcher.sh"
-    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo chmod +x /home/$UserToCreate/firefox-launcher.sh"
+
+    # same thing for filezilla
+    Set-SCPItem -Credential $creds  -ComputerName 127.0.0.1 -Port $MachineSSHPortTranslation -Path .\confs\clients\scripts\filezilla-autostart.sh.desktop -Destination ~ -Verbose -AcceptKey
+    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo dos2unix ~/filezilla-autostart.sh.desktop"
+    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo mv ~/filezilla-autostart.sh.desktop /etc/xdg/autostart/filezilla-autostart.sh.desktop"
+    Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo chown root:root /etc/xdg/autostart/filezilla-autostart.sh.desktop"
+
+    # # we also set a script on the client to open the firefox windows for admin
+    # # TODO Find a better way to open firefox at launch
+    # Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "echo '#!/bin/bash' | sudo tee /home/$UserToCreate/firefox-launcher.sh"
+    # Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "echo 'firefox http://smtp.eas.lan/postfixadmin/setup.php http://smtp.eas.lan/rainloop' | sudo tee -a /home/$UserToCreate/firefox-launcher.sh"
+    # Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo chown ${UserToCreate}:${UserToCreate} /home/$UserToCreate/firefox-launcher.sh"
+    # Invoke-BashFunction -SshSessionId $SshSessionId -CommandToExecute "sudo chmod +x /home/$UserToCreate/firefox-launcher.sh"
 
 }
